@@ -24,6 +24,12 @@ export interface FindOrCreateCustomerStepInput {
    * find a customer with this email or create a new customer having this email.
    */
   email?: string | null
+  /**
+   * When `customerId` isn't specified, only reuse guest customers (`has_account: false`)
+   * found by `email`. Set this when the email is supplied by an unauthenticated actor,
+   * since knowing an email is not proof of owning the registered account behind it.
+   */
+  onlyGuestByEmail?: boolean
 }
 
 /**
@@ -126,7 +132,11 @@ export const findOrCreateCustomerStep = createStep(
 
       let [customer] = originalCustomer
         ? [originalCustomer]
-        : await fetchCustomersByEmail(validatedEmail, container)
+        : await fetchCustomersByEmail(
+            validatedEmail,
+            container,
+            data.onlyGuestByEmail ? false : undefined
+          )
 
       // if NOT a guest customer, return it
       if (customer?.has_account) {
